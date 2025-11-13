@@ -8,6 +8,7 @@ WORKDIR /app
 COPY app/ .
 
 # 依存関係のインストール
+npm init -y
 RUN npm install
 
 # ポートを開ける（Koyeb用）、使用してるポート番号にすること。
