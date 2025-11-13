@@ -8,8 +8,7 @@ WORKDIR /app
 COPY app/ .
 
 # 依存関係のインストール
-RUN npm init -y
-RUN npm install
+RUN npm install discord.js
 
 # ポートを開ける（Koyeb用）、使用してるポート番号にすること。
 EXPOSE 8000
