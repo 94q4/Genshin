@@ -117,15 +117,18 @@ client.once("ready", async () => {
                 if (MAX_RESIN_ALERT && currentResin === data.max_resin && second == 0) {
                     await channel.send(`樹脂が満タンよ。早く消費しなさい。`);
                     console.log("Resin満タン通知送信");
+                    await wait(1);
                     return;
                 }
             } else if(MAX_RESIN_ALERT && currentResin === 199 && resinRecoveryTime < 30) {
                     await channel.send(`樹脂が満タンになったわ。早く消費しなさい。`);
                     console.log("Resin満タン通知送信");
+                    await wait(1);
                     return;
             } else if(currentResin <= data.ma_resin && second == 0){
                     await channel.send(createResinMessage(data));
                     console.log("Resin満タン通知送信");
+                    await wait(1);
                     return;
             }
             
@@ -134,6 +137,7 @@ client.once("ready", async () => {
                     if(second == 1){
                         await channel.send(`洞天宝銭が満タンね。`);
                         console.log("おくったよ");
+                        await wait(1);
                         return;
                     }
                 }
@@ -145,6 +149,7 @@ client.once("ready", async () => {
                         if(second == 2){
                             await channel.send(`まだデイリー任務が終わってないじゃない。早く終わらせなさい。`);
                             console.log("おくったよ");
+                            await wait(1);
                             return;
                         }
                     }
