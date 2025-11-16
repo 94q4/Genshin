@@ -131,7 +131,7 @@ client.once("ready", async () => {
             
             if (current_home_coin === max_home_coin) {
                 if(minute == 0|| minute == 30){
-                    if(second == 1|| second == 31){
+                    if(second == 1){
                         await channel.send(`洞天宝銭が満タンね。`);
                         console.log("おくったよ");
                         return;
@@ -139,10 +139,10 @@ client.once("ready", async () => {
                 }
             }         
             
-            if(hour >= 18 || hour < 5) { 
+            if(hour >= 10 || hour < 21) { 
                 if (finishedTaskNum < totalTaskNum ) {
                     if(minute == 0|| minute == 30){
-                        if(second == 2|| second == 32){
+                        if(second == 2){
                             await channel.send(`まだデイリー任務が終わってないじゃない。早く終わらせなさい。`);
                             console.log("おくったよ");
                             return;
