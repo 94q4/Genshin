@@ -10,8 +10,11 @@ COPY app/ .
 # 依存関係のインストール
 RUN npm init -y
 RUN npm install discord.js
-RUN npm intsall -g typescript
+RUN npm install -D ts-node typescript
 RUN npm install -g axios
+RUN npm install -D typescript ts-node @types/node
+RUN npm install
+
 
 # ポートを開ける（Koyeb用）、使用してるポート番号にすること。
 EXPOSE 8000
