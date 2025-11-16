@@ -1,21 +1,158 @@
+import { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } from "discord.js";
 import { GenshinClient } from "./genshinClient.js";
+import cron from "node-cron";
 
-async function main() {
-    const client = new GenshinClient({
-        uid: "894577157",
-        server: "os_asia",
-        ltoken: "v2_CAISDGM5b3FhcTNzM2d1OBokMGQxMmE4YTItMjQxZi00NTQwLTk1NjMtZThiMzM1NWNjZjBkIIri1cgGKL_fvJ0HMK2o0bIBQgtiYnNfb3ZlcnNlYVhq.CnEVaQAAAAAB.MEYCIQC3T9HYqcVi0Jr0OzC6gphV3CH-96808ob24LJCHvPH4wIhAKpPKWmKh04E2N55vrqXkixWImZG2oWIvh5T-dvmkl1I",
-        ltuid: "374625325"
-    });
+const BOT_TOKEN = "MTQzODA3MjQyMzc5ODAxODE4OA.GKorlK.nHQ31gXlWn3hCf696CaXWZmZGPM9DMg2zyE0xU";
+const CLIENT_ID = "1438072423798018188";
+const GUILD_ID = "1438060736034115586";
+const CHANNEL_ID = "1439492315730149416";
 
+
+const RESIN_THRESHOLD = 200; // Cron通知の閾値
+const MAX_RESIN_ALERT = true; // 天然樹脂満タン時に通知するか
+
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
+
+const genshin = new GenshinClient({
+    uid: "894577157",
+    server: "os_asia",
+    ltoken: "v2_CAISDGM5b3FhcTNzM2d1OBokMGQxMmE4YTItMjQxZi00NTQwLTk1NjMtZThiMzM1NWNjZjBkIIri1cgGKL_fvJ0HMK2o0bIBQgtiYnNfb3ZlcnNlYVhq.CnEVaQAAAAAB.MEYCIQC3T9HYqcVi0Jr0OzC6gphV3CH-96808ob24LJCHvPH4wIhAKpPKWmKh04E2N55vrqXkixWImZG2oWIvh5T-dvmkl1I",
+    ltuid: "374625325"
+});
+
+// --- スラッシュコマンド登録 ---
+const commands = [
+    new SlashCommandBuilder()
+        .setName("resin")
+        .setDescription("テイワットの樹脂を確認するわ。")
+].map(cmd => cmd.toJSON());
+
+const rest = new REST({ version: "10" }).setToken(BOT_TOKEN);
+
+(async () => {
     try {
-        const result = await client.getAll();
-        console.log("=== Genshin Daily Note ===");
-        console.dir(result, { depth: null });
-        console.log("=========================");
-    } catch (err) {
-        console.error("Error fetching data:", err);
+        console.log("スラッシュコマンドを登録中...");
+        await rest.put(
+            Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID),
+            { body: commands }
+        );
+        console.log("スラッシュコマンド登録完了");
+    } catch (error) {
+        console.error(error);
     }
+})();
+
+// --- Resinメッセージ生成関数 ---
+function createResinMessage(data) {
+    const currentResin = data.current_resin;
+    const maxResin = data.max_resin;
+    const resinRecoveryTime = data.resin_recovery_time;
+    const finishedTaskNum = data.finished_task_num;
+    const totalTaskNum = data.total_task_num;
+
+    let statusMessage = "";
+
+    if (currentResin === maxResin) {
+        statusMessage = "樹脂が満タンじゃない。何をしているの？早く消費しなさい。";
+    } else if (currentResin >= 160) {
+        statusMessage = "樹脂がもうすぐ満タンになるわ。急いで消費しなさい。";
+    } else if (currentResin >= 120) {
+        statusMessage = "樹脂がたまっているわ。忘れないうちに消費しなさい。";
+    } else if (currentResin >= 80) {
+        statusMessage = "樹脂が半分たまっているわ。もう少しでいっぱいになるわよ。";
+    } else if (currentResin >= 40) {
+        statusMessage = "樹脂はまだ全然たまってないわ。もう少し待ちなさい。";
+    } else {
+        statusMessage = "樹脂はほぼすっからかんね。時間を空けて確認なさい。";
+    }
+
+    const minutes = Math.floor(resinRecoveryTime / 60);
+    const seconds = resinRecoveryTime % 60;
+
+    return `テイワットを観察してきたわ。
+今の天然樹脂は ${currentResin}、${statusMessage}
+回復までの時間は、 ${minutes}分 ${seconds}秒ね。
+今日のデイリー任務は、 ${finishedTaskNum} / ${totalTaskNum} 完了しているわ。`;
 }
 
-main();
+// --- Bot起動時 ---
+client.once("ready", async () => {
+    console.log(`Logged in as ${client.user.tag}!`);
+    const channel = await client.channels.fetch(CHANNEL_ID);
+
+    if (!channel) {
+        console.error("通知チャンネルが見つかりません");
+        return;
+    }
+
+    // Cron: 毎日30分毎に天然樹脂のチェック
+    cron.schedule("0,30 * * * * *", async () => {
+        try {
+            const hour = new Date().getHours();
+            const minute = new Date().getMinutes();
+            const second = new Date().getSeconds();
+            const result = await genshin.getAll();
+            const data = result.dailyNote.data;
+            const finishedTaskNum = data.finished_task_num;
+            const totalTaskNum = data.total_task_num;
+            if (!data) return;
+
+            const currentResin = data.current_resin;
+
+            // 樹脂満タン通知
+            if (minute == 0|| minute == 30) {
+            if (MAX_RESIN_ALERT && currentResin === data.max_resin && second < 30) {
+                await channel.send(`樹脂が満タンよ。早く消費しなさい。`);
+                console.log("Resin満タン通知送信");
+                return;
+            } else {
+                await channel.send(message);
+                }
+            } else{
+                if (MAX_RESIN_ALERT && currentResin === 199 && resinRecoveryTime < 30) {
+                await channel.send(`樹脂が満タンになったわ。早く消費しなさい。`);
+                console.log("Resin満タン通知送信");
+                return;
+                } 
+            }
+
+            // Cron閾値通知
+            if(hour >= 18 || hour < 5) { 
+                if (finishedTaskNum < totalTaskNum ) {
+                    if(minute == 0|| minute == 30){
+                        await channel.send(`デイリー任務が終わってないじゃない。早く終わらせなさい。`);
+                        console.log("おくったよ");
+                    }
+                }
+            }
+        } catch (err) {
+            console.error("Cron エラー:", err);
+        }
+    });
+});
+
+// --- スラッシュコマンド実行 ---
+client.on("interactionCreate", async interaction => {
+    if (!interaction.isCommand()) return;
+
+    if (interaction.commandName === "resin") {
+        try {
+            const result = await genshin.getAll();
+            const data = result.dailyNote.data;
+
+            if (!data) {
+                await interaction.reply("Daily note data が取得できませんでした");
+                return;
+            }
+
+            const message = createResinMessage(data);
+            await interaction.reply(message);
+
+        } catch (err) {
+            console.error("Slash コマンドエラー:", err);
+            await interaction.reply("データ取得中にエラーが発生しました");
+        }
+    }
+});
+
+client.login(BOT_TOKEN);
