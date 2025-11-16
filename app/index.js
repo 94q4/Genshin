@@ -1,6 +1,8 @@
 import { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } from "discord.js";
 import { GenshinClient } from "./genshinClient.js";
 import cron from "node-cron";
+import { serve } from "@hono/node-server";
+import healthCheckServer from "./healthcheck.js";
 
 const BOT_TOKEN = "MTQzODA3MjQyMzc5ODAxODE4OA.GKorlK.nHQ31gXlWn3hCf696CaXWZmZGPM9DMg2zyE0xU";
 const CLIENT_ID = "1438072423798018188";
@@ -18,6 +20,11 @@ const genshin = new GenshinClient({
     server: "os_asia",
     ltoken: "v2_CAISDGM5b3FhcTNzM2d1OBokMGQxMmE4YTItMjQxZi00NTQwLTk1NjMtZThiMzM1NWNjZjBkIIri1cgGKL_fvJ0HMK2o0bIBQgtiYnNfb3ZlcnNlYVhq.CnEVaQAAAAAB.MEYCIQC3T9HYqcVi0Jr0OzC6gphV3CH-96808ob24LJCHvPH4wIhAKpPKWmKh04E2N55vrqXkixWImZG2oWIvh5T-dvmkl1I",
     ltuid: "374625325"
+});
+
+serve({
+    fetch: healthCheckServer.fetch,
+    port: 8000,
 });
 
 // --- スラッシュコマンド登録 ---
@@ -49,11 +56,14 @@ function createResinMessage(data) {
     const resinRecoveryTime = data.resin_recovery_time;
     const finishedTaskNum = data.finished_task_num;
     const totalTaskNum = data.total_task_num;
+    const current_home_coin = data.current_home_coin;
+    const max_home_coin = data.max_home_coin;
+    const home_coin_recovery_time = data.home_coin_recovery_time;
 
     let statusMessage = "";
 
     if (currentResin === maxResin) {
-        statusMessage = "樹脂が満タンじゃない。何をしているの？早く消費しなさい。";
+        statusMessage = "樹脂が満タンじゃない。とっとと消費しなさい。";
     } else if (currentResin >= 160) {
         statusMessage = "樹脂がもうすぐ満タンになるわ。急いで消費しなさい。";
     } else if (currentResin >= 120) {
@@ -72,7 +82,8 @@ function createResinMessage(data) {
     return `テイワットを観察してきたわ。
 今の天然樹脂は ${currentResin}、${statusMessage}
 回復までの時間は、 ${minutes}分 ${seconds}秒ね。
-今日のデイリー任務は、 ${finishedTaskNum} / ${totalTaskNum} 完了しているわ。`;
+今日のデイリー任務は、 ${finishedTaskNum} / ${totalTaskNum} 完了しているわ。
+現在の洞天宝銭は ${current_home_coin} / ${max_home_coin}、回復までの時間は ${Math.floor(home_coin_recovery_time / 60)}分ね。`;
 }
 
 // --- Bot起動時 ---
@@ -95,10 +106,12 @@ client.once("ready", async () => {
             const data = result.dailyNote.data;
             const finishedTaskNum = data.finished_task_num;
             const totalTaskNum = data.total_task_num;
+            const current_home_coin = data.current_home_coin;
+            const max_home_coin = data.max_home_coin;
+            const home_coin_recovery_time = data.home_coin_recovery_time;
             if (!data) return;
-
             const currentResin = data.current_resin;
-
+            
             // 樹脂満タン通知
             if (minute == 0|| minute == 30) {
             if (MAX_RESIN_ALERT && currentResin === data.max_resin && second < 30) {
@@ -115,8 +128,14 @@ client.once("ready", async () => {
                 return;
                 } 
             }
-
-            // Cron閾値通知
+ 
+            if (current_home_coin === max_home_coin) {
+                if(minute == 0|| minute == 30){
+                    await channel.send(`洞天宝銭が満タンね。`);
+                        console.log("おくったよ");
+                    }
+            }            
+            
             if(hour >= 18 || hour < 5) { 
                 if (finishedTaskNum < totalTaskNum ) {
                     if(minute == 0|| minute == 30){
