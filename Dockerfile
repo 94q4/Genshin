@@ -15,6 +15,7 @@ RUN npm install -D ts-node typescript
 RUN npm install -g axios
 RUN npm install node-cron
 RUN npm install -D typescript ts-node @types/node
+RUN npm install @hono/node-server
 RUN npm install
 
 
