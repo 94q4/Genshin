@@ -97,7 +97,7 @@ client.once("ready", async () => {
     }
 
     // Cron: 毎日30分毎に天然樹脂のチェック
-    cron.schedule("0,30 * * * * *", async () => {
+    cron.schedule("0,1,2,30,31,32 * * * * *", async () => {
         try {
             const hour = new Date().getHours();
             const minute = new Date().getMinutes();
@@ -114,33 +114,39 @@ client.once("ready", async () => {
             
             // 樹脂満タン通知
             if (minute == 0|| minute == 30) {
-            if (MAX_RESIN_ALERT && currentResin === data.max_resin && second < 30) {
-                await channel.send(`樹脂が満タンよ。早く消費しなさい。`);
-                console.log("Resin満タン通知送信");
-                return;
-            } else {
-                await channel.send(createResinMessage(data));
+                if (MAX_RESIN_ALERT && currentResin === data.max_resin && second == 0) {
+                    await channel.send(`樹脂が満タンよ。早く消費しなさい。`);
+                    console.log("Resin満タン通知送信");
+                    return;
                 }
-            } else{
-                if (MAX_RESIN_ALERT && currentResin === 199 && resinRecoveryTime < 30) {
-                await channel.send(`樹脂が満タンになったわ。早く消費しなさい。`);
-                console.log("Resin満タン通知送信");
-                return;
-                } 
+            } else if(MAX_RESIN_ALERT && currentResin === 199 && resinRecoveryTime < 30) {
+                    await channel.send(`樹脂が満タンになったわ。早く消費しなさい。`);
+                    console.log("Resin満タン通知送信");
+                    return;
+            } else if(currentResin <= data.ma_resin && second == 0){
+                    await channel.send(createResinMessage(data));
+                    console.log("Resin満タン通知送信");
+                    return;
             }
- 
+            
             if (current_home_coin === max_home_coin) {
                 if(minute == 0|| minute == 30){
-                    await channel.send(`洞天宝銭が満タンね。`);
+                    if(second == 1|| second == 31){
+                        await channel.send(`洞天宝銭が満タンね。`);
                         console.log("おくったよ");
+                        return;
                     }
-            }            
+                }
+            }         
             
             if(hour >= 18 || hour < 5) { 
                 if (finishedTaskNum < totalTaskNum ) {
                     if(minute == 0|| minute == 30){
-                        await channel.send(`デイリー任務が終わってないじゃない。早く終わらせなさい。`);
-                        console.log("おくったよ");
+                        if(second == 2|| second == 32){
+                            await channel.send(`まだデイリー任務が終わってないじゃない。早く終わらせなさい。`);
+                            console.log("おくったよ");
+                            return;
+                        }
                     }
                 }
             }
