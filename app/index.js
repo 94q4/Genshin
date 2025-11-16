@@ -119,7 +119,7 @@ client.once("ready", async () => {
                 console.log("Resin満タン通知送信");
                 return;
             } else {
-                await channel.send(message);
+                await channel.send(createResinMessage(data));
                 }
             } else{
                 if (MAX_RESIN_ALERT && currentResin === 199 && resinRecoveryTime < 30) {
