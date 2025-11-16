@@ -10,6 +10,7 @@ COPY app/ .
 # 依存関係のインストール
 RUN npm init -y
 RUN npm install discord.js
+RUN npm install node-cron
 RUN npm install -D ts-node typescript
 RUN npm install -g axios
 RUN npm install -D typescript ts-node @types/node
