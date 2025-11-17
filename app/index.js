@@ -67,23 +67,26 @@ function createResinMessage(data) {
     } else if (currentResin >= 160) {
         statusMessage = "樹脂がもうすぐ満タンになるわ。急いで消費しなさい。";
     } else if (currentResin >= 120) {
-        statusMessage = "樹脂がたまっているわ。忘れないうちに消費しなさい。";
+        statusMessage = "樹脂がたまっているわ。そろそろ消費しなさい。";
+    } else if (currentResin >= 100) {
+        statusMessage = "樹脂が半分たまっているわ。忘れないうちに消費しなさい。";
     } else if (currentResin >= 80) {
-        statusMessage = "樹脂が半分たまっているわ。もう少しでいっぱいになるわよ。";
+        statusMessage = "樹脂がたまっているわ。後で消費するのを忘れないようにしなさい。";
     } else if (currentResin >= 40) {
         statusMessage = "樹脂はまだ全然たまってないわ。もう少し待ちなさい。";
     } else {
         statusMessage = "樹脂はほぼすっからかんね。時間を空けて確認なさい。";
     }
 
+    const hours = Math.floor(resinRecoveryTime / 3600);
     const minutes = Math.floor(resinRecoveryTime / 60);
     const seconds = resinRecoveryTime % 60;
 
     return `テイワットを観察してきたわ。
 今の天然樹脂は ${currentResin}、${statusMessage}
-回復までの時間は、 ${minutes}分 ${seconds}秒ね。
-今日のデイリー任務は、 ${finishedTaskNum} / ${totalTaskNum} 完了しているわ。
-現在の洞天宝銭は ${current_home_coin} / ${max_home_coin}、回復までの時間は ${Math.floor(home_coin_recovery_time / 60)}分ね。`;
+回復までの時間は、 ${hours}時間${minutes}分と${seconds}秒ね。
+今日のデイリー任務は、${finishedTaskNum}個完了しているわ。（${finishedTaskNum} / ${totalTaskNum}） 
+現在の洞天宝銭は ${current_home_coin}、回復までの時間は ${Math.floor(home_coin_recovery_time / 60)}分ね。（${current_home_coin} / ${max_home_coin}）`;
 }
 
 // --- Bot起動時 ---
@@ -97,7 +100,7 @@ client.once("ready", async () => {
     }
 
     // Cron: 毎日30分毎に天然樹脂のチェック
-    cron.schedule("0,1,2,30,31,32 * * * * *", async () => {
+    cron.schedule("0,5,30 * * * *", async () => {
         try {
             const hour = new Date().getHours();
             const minute = new Date().getMinutes();
@@ -113,46 +116,36 @@ client.once("ready", async () => {
             const currentResin = data.current_resin;
             
             // 樹脂満タン通知
-            if (minute == 0|| minute == 30) {
-                if (MAX_RESIN_ALERT && currentResin === data.max_resin && second == 0) {
-                    await channel.send(`樹脂が満タンよ。早く消費しなさい。`);
-                    console.log("Resin満タン通知送信");
-                    await wait(1);
-                    return;
-                }
+            if (MAX_RESIN_ALERT && currentResin === data.max_resin) {
+                await channel.send(`樹脂が満タンよ。早く消費しなさい。`);
+                console.log("Resin満タン通知送信");
+                await wait(1);
+                return;
             } else if(MAX_RESIN_ALERT && currentResin === 199 && resinRecoveryTime < 30) {
-                    await channel.send(`樹脂が満タンになったわ。早く消費しなさい。`);
-                    console.log("Resin満タン通知送信");
-                    await wait(1);
-                    return;
-            } else if(currentResin <= data.ma_resin && second == 0){
-                    await channel.send(createResinMessage(data));
-                    console.log("Resin満タン通知送信");
-                    await wait(1);
-                    return;
+                await channel.send(`樹脂が満タンになったわ。早く消費しなさい。`);
+                console.log("Resin満タン通知送信");
+                await wait(1);
+                return;
+            } else if(currentResin <= data.max_resin){
+                await channel.send(`今の樹脂は${currentResin}。報告、感謝しなさい。`);
+                console.log("Resin満タン通知送信");
+                await wait(1);
+                return;
             }
             
             if (current_home_coin === max_home_coin) {
-                if(minute == 0|| minute == 30){
-                    if(second == 1){
-                        await channel.send(`洞天宝銭が満タンね。`);
-                        console.log("おくったよ");
-                        await wait(1);
-                        return;
-                    }
-                }
+                await channel.send(`洞天宝銭が満タンね。`);
+                console.log("おくったよ");
+                await wait(1);
+                return;
             }         
             
-            if(hour >= 10 || hour < 21) { 
+            if(hour >= 10 && hour < 21) { 
                 if (finishedTaskNum < totalTaskNum ) {
-                    if(minute == 0|| minute == 30){
-                        if(second == 2){
-                            await channel.send(`まだデイリー任務が終わってないじゃない。早く終わらせなさい。`);
-                            console.log("おくったよ");
-                            await wait(1);
-                            return;
-                        }
-                    }
+                    await channel.send(`まだデイリー任務が終わってないじゃない。早く終わらせなさい。`);
+                    console.log("おくったよ");
+                    await wait(1);
+                    return;
                 }
             }
         } catch (err) {
