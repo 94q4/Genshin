@@ -100,7 +100,7 @@ client.once("ready", async () => {
     }
 
     // Cron: 毎日30分毎に天然樹脂のチェック
-    cron.schedule("0,8,30 * * * *", async () => {
+    cron.schedule("0,10,30 * * * *", async () => {
         try {
             const hour = new Date().getHours();
             const minute = new Date().getMinutes();
