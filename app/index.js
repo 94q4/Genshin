@@ -27,7 +27,7 @@ serve({
     port: 8000,
 });
 
-// --- スラッシュコマンド登録 ---
+// スラッシュコマンド登録
 const commands = [
     new SlashCommandBuilder()
         .setName("resin")
@@ -49,7 +49,7 @@ const rest = new REST({ version: "10" }).setToken(BOT_TOKEN);
     }
 })();
 
-// --- Resinメッセージ生成関数 ---
+// 樹脂のメッセージ生成用関数
 function createResinMessage(data) {
     const currentResin = data.current_resin;
     const maxResin = data.max_resin;
@@ -59,6 +59,7 @@ function createResinMessage(data) {
     const current_home_coin = data.current_home_coin;
     const max_home_coin = data.max_home_coin;
     const home_coin_recovery_time = data.home_coin_recovery_time;
+    var home_coin_recovery_time_about = Math.round(home_coin_recovery_time / 3600);
 
     let statusMessage = "";
 
@@ -81,15 +82,19 @@ function createResinMessage(data) {
     const hours = Math.floor(resinRecoveryTime / 3600);
     const minutes = Math.floor(resinRecoveryTime / 60);
     const seconds = resinRecoveryTime % 60;
-
+    if(0.25 <Math.floor(home_coin_recovery_time / 3600 - home_coin_recovery_time_about) && 0.75 > Math.floor(home_coin_recovery_time / 3600) - home_coin_recovery_time_about){
+        let housenhalf = "半";
+    } else {
+        let housenhalf = "";
+    }
     return `テイワットを観察してきたわ。
 今の天然樹脂は ${currentResin}、${statusMessage}
 回復までの時間は、 ${hours}時間${minutes}分と${seconds}秒ね。
 今日のデイリー任務は、${finishedTaskNum}個完了しているわ。（${finishedTaskNum} / ${totalTaskNum}） 
-現在の洞天宝銭は ${current_home_coin}、回復までの時間は ${Math.floor(home_coin_recovery_time / 60)}分ね。（${current_home_coin} / ${max_home_coin}）`;
+現在の洞天宝銭は ${current_home_coin}、回復までの時間はだいたい${Math.floor(home_coin_recovery_time / 3600)}時間${housenhalf}ね。（${current_home_coin} / ${max_home_coin}）`;
 }
 
-// --- Bot起動時 ---
+// Bot起動時
 client.once("ready", async () => {
     console.log(`Logged in as ${client.user.tag}!`);
     const channel = await client.channels.fetch(CHANNEL_ID);
@@ -99,8 +104,8 @@ client.once("ready", async () => {
         return;
     }
 
-    // Cron: 毎日30分毎に天然樹脂のチェック
-    cron.schedule("0,10,30 * * * *", async () => {
+    // 毎日30分毎に天然樹脂のチェック
+    cron.schedule("0,30 * * * *", async () => {
         try {
             const hour = new Date().getHours();
             const minute = new Date().getMinutes();
@@ -118,43 +123,73 @@ client.once("ready", async () => {
             // 樹脂満タン通知
             if (MAX_RESIN_ALERT && currentResin === data.max_resin) {
                 await channel.send(`樹脂が満タンよ。早く消費しなさい。`);
-                console.log("Resin満タン通知送信");
+                console.log("じゅしがまんたん～");
                 await wait(1);
+                if (current_home_coin === max_home_coin) {
+                    await channel.send(`洞天宝銭が満タンね。`);
+                    console.log("どうてん～");
+                    await wait(1);
+                    if(hour >= 10 && hour < 21) { 
+                        if (finishedTaskNum < totalTaskNum ) {
+                            await channel.send(`まだデイリー任務が終わってないじゃない。早く終わらせなさい。`);
+                            console.log("でいり～");
+                            await wait(1);
+                        return;
+                    }
+                    return;
+                }         
                 return;
-            } else if(MAX_RESIN_ALERT && currentResin === 199 && resinRecoveryTime < 30) {
-                await channel.send(`樹脂が満タンになったわ。早く消費しなさい。`);
-                console.log("Resin満タン通知送信");
+            } else if(MAX_RESIN_ALERT && currentResin > 192) {
+                await channel.send(`樹脂が満タンになるわ。早く消費しなさい。`);
+                console.log("じゅしがまんたんになる～");
                 await wait(1);
+                if (current_home_coin === max_home_coin) {
+                    await channel.send(`洞天宝銭が満タンね。`);
+                    console.log("どうてん～");
+                    await wait(1);
+                    if(hour >= 10 && hour < 21) { 
+                        if (finishedTaskNum < totalTaskNum ) {
+                            await channel.send(`まだデイリー任務が終わってないじゃない。早く終わらせなさい。`);
+                            console.log("でいり～");
+                            await wait(1);
+                            return;
+                            }
+                            return;
+                        }
+                        return;
+                    }         
+                    return;
+                }         
                 return;
             } else if(currentResin <= data.max_resin){
-                await channel.send(`今の樹脂は${currentResin}。報告、感謝しなさい。`);
-                console.log("Resin満タン通知送信");
+                await channel.send(`今の天然樹脂は${currentResin}ね。`);
+                console.log("じゅしなう～");
                 await wait(1);
-                return;
-            }
-            
-            if (current_home_coin === max_home_coin) {
-                await channel.send(`洞天宝銭が満タンね。`);
-                console.log("おくったよ");
-                await wait(1);
-                return;
-            }         
-            
-            if(hour >= 10 && hour < 21) { 
-                if (finishedTaskNum < totalTaskNum ) {
-                    await channel.send(`まだデイリー任務が終わってないじゃない。早く終わらせなさい。`);
-                    console.log("おくったよ");
+                if (current_home_coin === max_home_coin) {
+                    await channel.send(`洞天宝銭が満タンね。`);
+                    console.log("どうてん～");
                     await wait(1);
+                    if(hour >= 10 && hour < 21) { 
+                        if (finishedTaskNum < totalTaskNum ) {
+                            await channel.send(`まだデイリー任務が終わってないじゃない。早く終わらせなさい。`);
+                            console.log("でいり～");
+                            await wait(1);
+                            return;
+                        }
+                        return;
+                    }         
                     return;
                 }
-            }
+                return;
+            }         
+            return;
         } catch (err) {
-            console.error("Cron エラー:", err);
+            console.error("cronエラー:", err);
         }
     });
 });
 
-// --- スラッシュコマンド実行 ---
+// resinコマンド
 client.on("interactionCreate", async interaction => {
     if (!interaction.isCommand()) return;
 
@@ -164,7 +199,7 @@ client.on("interactionCreate", async interaction => {
             const data = result.dailyNote.data;
 
             if (!data) {
-                await interaction.reply("Daily note data が取得できませんでした");
+                await interaction.reply("データが取得できませんでした");
                 return;
             }
 
@@ -172,8 +207,8 @@ client.on("interactionCreate", async interaction => {
             await interaction.reply(message);
 
         } catch (err) {
-            console.error("Slash コマンドエラー:", err);
-            await interaction.reply("データ取得中にエラーが発生しました");
+            console.error("コマンドエラー:", err);
+            await interaction.reply("エラーが発生！！");
         }
     }
 });
