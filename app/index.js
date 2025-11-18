@@ -62,6 +62,7 @@ function createResinMessage(data) {
     var home_coin_recovery_time_about = Math.round(home_coin_recovery_time / 3600);
 
     let statusMessage = "";
+    let housenhalf = "";
 
     if (currentResin === maxResin) {
         statusMessage = "樹脂が満タンじゃない。とっとと消費しなさい。";
@@ -83,9 +84,7 @@ function createResinMessage(data) {
     const minutes = Math.floor(resinRecoveryTime / 60);
     const seconds = resinRecoveryTime % 60;
     if(0.25 <Math.floor(home_coin_recovery_time / 3600 - home_coin_recovery_time_about) && 0.75 > Math.floor(home_coin_recovery_time / 3600) - home_coin_recovery_time_about){
-        let housenhalf = "半";
-    } else {
-        let housenhalf = "";
+        housenhalf = "半";
     }
     return `テイワットを観察してきたわ。
 今の天然樹脂は ${currentResin}、${statusMessage}
