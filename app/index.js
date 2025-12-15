@@ -4,10 +4,10 @@ import cron from "node-cron";
 import { serve } from "@hono/node-server";
 import healthCheckServer from "./healthcheck.js";
 
-const BOT_TOKEN = "MTQzODA3MjQyMzc5ODAxODE4OA.GKorlK.nHQ31gXlWn3hCf696CaXWZmZGPM9DMg2zyE0xU";
-const CLIENT_ID = "1438072423798018188";
-const GUILD_ID = "1438060736034115586";
-const CHANNEL_ID = "1439492315730149416";
+const BOT_TOKEN = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"; // discordのボットトークンを貼ってね
+const CLIENT_ID = "XXXXXXXXXXXXXXXXXXXX"; //クライアントid貼ってね
+const GUILD_ID = "XXXXXXXXXXXXXXXXXXXX"; // なんだっけこれ？俺も忘れちゃった
+const CHANNEL_ID = "XXXXXXXXXXXXXXXXXXXX"; // 稼働させたいサーバーのチャンネルのid貼ってね
 
 
 const RESIN_THRESHOLD = 200; // Cron通知の閾値
@@ -16,10 +16,10 @@ const MAX_RESIN_ALERT = true; // 天然樹脂満タン時に通知するか
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
 
 const genshin = new GenshinClient({
-    uid: "894577157",
-    server: "os_asia",
-    ltoken: "v2_CAISDGM5b3FhcTNzM2d1OBokMGQxMmE4YTItMjQxZi00NTQwLTk1NjMtZThiMzM1NWNjZjBkIIri1cgGKL_fvJ0HMK2o0bIBQgtiYnNfb3ZlcnNlYVhq.CnEVaQAAAAAB.MEYCIQC3T9HYqcVi0Jr0OzC6gphV3CH-96808ob24LJCHvPH4wIhAKpPKWmKh04E2N55vrqXkixWImZG2oWIvh5T-dvmkl1I",
-    ltuid: "374625325"
+    uid: "XXXXXXXXX", // 原神のUID。8若しくは18からはじまるながい羅列。
+    server: "os_asia", // おそらくみんなアジアだよね
+    ltoken: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", // hoyolabのcookie情報から抜き取れるバカ長いトークン。ltoken_v2とかいうやつ。
+    ltuid: "XXXXXXXXX" //hoyolabのUIDらしい？多分cookie情報から抜き取れる。ltuid。
 });
 
 serve({
@@ -27,29 +27,29 @@ serve({
     port: 8000,
 });
 
-// スラッシュコマンド登録
+// コマンド登録
 const commands = [
     new SlashCommandBuilder()
-        .setName("resin")
-        .setDescription("テイワットの樹脂を確認するわ。")
+        .setName("resin") // ここでコマンドの名前変える
+        .setDescription("テイワットの樹脂を確認するわ。") // 説明文カエル
 ].map(cmd => cmd.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(BOT_TOKEN);
 
 (async () => {
     try {
-        console.log("スラッシュコマンドを登録中...");
+        console.log("コマンドを登録中...");
         await rest.put(
             Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID),
             { body: commands }
         );
-        console.log("スラッシュコマンド登録完了");
+        console.log("コマンド登録完了");
     } catch (error) {
         console.error(error);
     }
 })();
 
-// 樹脂のメッセージ生成用関数
+// 樹脂のメッセージ生成関数
 function createResinMessage(data) {
     const currentResin = data.current_resin;
     const maxResin = data.max_resin;
@@ -213,3 +213,4 @@ client.on("interactionCreate", async interaction => {
 });
 
 client.login(BOT_TOKEN);
+
