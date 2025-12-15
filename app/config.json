@@ -1,7 +1,8 @@
 {
-        "clientId": "XXXXXXXXXXXXXXXXXXXX", // ここにコピペ
-        "token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", // 同文
-    	"guildId": "XXXXXXXXXXXXXXXXXXXXX" // 同文
+        "clientId": "XXXXXXXXXXXXXXXXXXXX",
+        "token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    	"guildId": "XXXXXXXXXXXXXXXXXXXXX"
 
 }
+
 
