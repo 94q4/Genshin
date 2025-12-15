@@ -1,6 +1,7 @@
 {
-        "clientId": "1438072423798018188",
-        "token": "MTQzODA3MjQyMzc5ODAxODE4OA.GKorlK.nHQ31gXlWn3hCf696CaXWZmZGPM9DMg2zyE0xU",
-    	"guildId": "1438060736034115586"
+        "clientId": "XXXXXXXXXXXXXXXXXXXX", // ここにコピペ
+        "token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", // 同文
+    	"guildId": "XXXXXXXXXXXXXXXXXXXXX" // 同文
 
 }
+
