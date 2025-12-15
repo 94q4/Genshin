@@ -31,8 +31,8 @@ export class GenshinClient {
 
     async getAll() {
         const daily = await this.getDailyNote();
-        // ここでは他のエンドポイントは除外
         return { dailyNote: daily };
     }
 }
+
 
